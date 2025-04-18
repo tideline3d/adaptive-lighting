@@ -7,7 +7,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME, MAJOR_VERSION, MINOR_VERSION
 from homeassistant.core import callback
-from homeassistant.helpers import entity_registry as er
 
 from .const import (  # pylint: disable=unused-import
     CONF_LIGHTS,
@@ -105,15 +104,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             if not errors:
                 return self.async_create_entry(title="", data=user_input)
 
-        ent_reg = await er.async_get_registry(self.hass)
-        all_light_ids = self.hass.states.async_entity_ids("light")
-        all_lights = []
-        for light_id in all_light_ids:
-            entry = ent_reg.async_get(light_id)
-            # Check if entity is in registry, is visible (not hidden), and has supported features
-            if entry is not None and entry.hidden_by is None and _supported_features(self.hass, light_id):
-                all_lights.append(light_id)
-
+        all_lights = [
+            light
+            for light in self.hass.states.async_entity_ids("light")
+            if _supported_features(self.hass, light)
+        ]
         for configured_light in data[CONF_LIGHTS]:
             if configured_light not in all_lights:
                 errors = {CONF_LIGHTS: "entity_missing"}
