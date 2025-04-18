@@ -108,6 +108,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             light
             for light in self.hass.states.async_entity_ids("light")
             if _supported_features(self.hass, light)
+            and not self.hass.states.get(light).attributes.get("hidden", False)
         ]
         for configured_light in data[CONF_LIGHTS]:
             if configured_light not in all_lights:
